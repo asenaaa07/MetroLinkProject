@@ -16,27 +16,33 @@ import java.util.Collections;
 //where the program runs
 public class Main {
 
-    //shows the two stations have a cannection between 
+    //shows the two stations have a cannection between
+    //Edge is a object orianted class 
     static class Edge {
 
         //stores the values that have been given
+        //object variables
         String to;
         double time;
         String line;
 
-        //Edge is a constructor.
+        //Edge is a constructor. Helps create objects
         // A constructor name has to be same with class name.
         Edge(String to, double time, String line) {
 
-            //"this" in java means that it saves the values inside the object.
-            //yani yukarda olana yaziyorlar programda asagiya kaydediyor
+            //"this.to" in java means variable inside the object
+            //"to" paramater coming into constructor
             this.to = to;
             this.time = time;
             this.line = line;
         }
     }
 
+    //it is a object orianted class
+    //"implements Camparable..." is an interface implementation for abstract data types
     static class MetroJourney implements Comparable<MetroJourney> {
+
+        //instance variables belonging to MetroJourney object
         String station;
         String line;
         double time;
@@ -54,6 +60,7 @@ public class Main {
             this.mode = mode;
         }
 
+        //this is a method. a function inside a class
         public int compareTo(MetroJourney other) {
             if (mode.equals("changes")) {
                 if (this.changes != other.changes) {
@@ -66,8 +73,10 @@ public class Main {
         }
     }
 
-    //object that keeps the last answer
+    //class that keeps the last answer
     static class FinalDirection {
+
+        //instance variables that belong to FinalDirection object
         List<String> routeKeys;
         double time;
         int changes;
@@ -79,29 +88,40 @@ public class Main {
         }
     }
 
+    //where the program starts running and this is a method
+    //"String[] args" is a parameter
     public static void main(String[] args) {
 
         //Keeps all the station names and does not allow duplicates
+        //"stations" is a variable. "Set<String>" is a interface type. "HashSet<String>()" is a object.
         Set<String> stations = new HashSet<String>();
 
-        //Creats the graph
+        //Creats the graph structure
+        //variable and a map collection
         Map<String, List<Edge>> graph = new HashMap<String, List<Edge>>();
 
         //using try because the file i put in might not open
         try {
 
             //opens up the file i need to use
+            //object
             Scanner fileReader = new Scanner(new File("Metrolink_times_linecolour.csv"));
 
             String currentLineColour = "unknown";
 
+            //loop that keeps on going if the condition is true
+            //will keep on reading  the file line by line until it ends
             while (fileReader.hasNextLine()) {
                 String line = fileReader.nextLine().trim();
 
+                //conditional statment that makes decisions
+                //checks for empty lines in the file and skips them
                 if (line.isEmpty()) {
                     continue;
                 }
 
+                //array variable that stores multiple strings
+                //"line.split(",")" is a method that belongs to string class
                 String[] parts = line.split(",");
 
 
@@ -111,24 +131,31 @@ public class Main {
                     continue;
                 }
 
+                //makes sure the file has enough lines before continuing
                 if (parts.length >= 3) {
                     try {
                         String from = parts[0].trim().toLowerCase();
                         String to = parts[1].trim().toLowerCase();
+
+                        //static method that turns text into number
                         double time = Double.parseDouble(parts[2].trim());
 
                         String lineColour = currentLineColour;
 
+                        //nested if statment that checks if a line colour exist in the row
                         if (parts.length >= 4) {
                             lineColour = parts[3].trim().toLowerCase();
                         }
 
+                        //a method thet adds an item into collection
                         stations.add(from);
                         stations.add(to);
 
+                        //method that adds something only if it doesn't exist
                         graph.putIfAbsent(from, new ArrayList<Edge>());
                         graph.putIfAbsent(to, new ArrayList<Edge>());
 
+                        //"new Edge" object creation that creates an Edge object
                         graph.get(from).add(new Edge(to, time, lineColour));
                         graph.get(to).add(new Edge(from, time, lineColour));
 
@@ -146,6 +173,7 @@ public class Main {
             System.out.println("Enter start station:");
             String startStation = names.nextLine().trim().toLowerCase();
 
+            //will keep on asking the user to enter a valid station
             while (!stations.contains(startStation)) {
                 System.out.println("Invalid start station. Please enter again:");
                 startStation = names.nextLine().trim().toLowerCase();
@@ -181,6 +209,7 @@ public class Main {
             String mode;
             String title;
 
+            //if the condition is true it will do the first block if not do the second block
             if (choice.equals("1")) {
                 mode = "time";
                 title = "*** Route with Shortest Time ***";
@@ -189,7 +218,7 @@ public class Main {
                 title = "*** Route with Fewest Changes ***";
             }
 
-            //uses the findRoute method
+            //calls the findRoute method
             FinalDirection result = findRoute(graph, startStation, endStation, mode);
 
             showRoute(result, title);
@@ -204,6 +233,7 @@ public class Main {
     public static FinalDirection findRoute(Map<String, List<Edge>> graph, String start, String end, String mode) {
 
         //will scan through then will find the best journey
+        //and it is a collection class
         PriorityQueue<MetroJourney> queue = new PriorityQueue<MetroJourney>();
         Map<String, Double> bestTime = new HashMap<String, Double>();
         Map<String, Integer> bestChanges = new HashMap<String, Integer>();
@@ -217,7 +247,11 @@ public class Main {
 
         String bestEndKey = null;
 
+        //repeatedly processes the best avalible journey from the priorty queue until the destination is found 
+        //or the no routes remain
         while (!queue.isEmpty()) {
+
+            //"queue.poll()" is a method the removes and runs the best value that is in the queue
             MetroJourney current = queue.poll();
             String currentKey = current.station + "|" + current.line;
 
@@ -237,6 +271,7 @@ public class Main {
             }
 
             //checks all the stations that are connected to given input
+            //and it is also a enhanced for loop. loops through all connected edges
             for (Edge edge : graph.get(current.station)) {
                 double newTime = current.time + edge.time;
                 int newChanges = current.changes;
@@ -254,6 +289,8 @@ public class Main {
 
                 if (!bestTime.containsKey(nextKey)) {
                     shouldUpdate = true;
+
+                    //checks if the time is correct and if the route is faster than the previously stored route
                 } else if (mode.equals("time") && newTime < bestTime.get(nextKey)) {
                     shouldUpdate = true;
                 } else if (mode.equals("changes")) {
@@ -285,11 +322,13 @@ public class Main {
             currentKey = previous.get(currentKey);
         }
 
+        //static method that reverses the list order
         Collections.reverse(routeKeys);
 
         return new FinalDirection(routeKeys, bestTime.get(bestEndKey), bestChanges.get(bestEndKey));
     }
 
+    //"ShowRoute" is a method call that calls the method that prints the route 
     public static void showRoute(FinalDirection result, String title) {
 
         if (result.routeKeys.isEmpty()) {
@@ -307,6 +346,8 @@ public class Main {
 
             String currentLine = firstLine;
 
+            //it iterates through the final route list and prints each station in order
+            //it goes through the route list one station at a time
             for (int i = 1; i < result.routeKeys.size(); i++) {
                 String[] currentParts = result.routeKeys.get(i).split("\\|");
 
